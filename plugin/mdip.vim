@@ -180,7 +180,17 @@ endfunction
 function! g:MarkdownPasteImage(relpath)
         execute "normal! i![" . g:mdip_tmpname[0:0]
         let ipos = getcurpos()
-        execute "normal! a" . g:mdip_tmpname[1:] . "](" . a:relpath . ")"
+        if g:mdip_relative_link == 1
+            let current_path = expand('%:p:h')
+            let get_relative_path_cmd = 'realpath --relative-to ' .  current_path . ' ' . a:relpath
+            let relative_path = substitute(system(get_relative_path_cmd), '\n', '', '')
+            if v:shell_error
+                return 1
+            endif
+            execute "normal! a" . g:mdip_tmpname[1:] . "](" . relative_path . ")"
+        else
+            execute "normal! a" . g:mdip_tmpname[1:] . "](" . a:relpath . ")"
+        endif
         call setpos('.', ipos)
         execute "normal! vt]\<C-g>"
 endfunction
@@ -251,4 +261,7 @@ if !exists('g:mdip_tmpname')
 endif
 if !exists('g:mdip_imgname')
     let g:mdip_imgname = 'image'
+endif
+if !exists('g:mdip_relative_link')
+    let g:mdip_relative_link = 0
 endif
